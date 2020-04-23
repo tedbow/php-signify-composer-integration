@@ -6,38 +6,61 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  COMPOSER_FLAGS: "--ansi --no-interaction --no-progress --prefer-dist --optimize-autoloader"
+
 jobs:
   build:
 
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, macos-latest, windows-latest]
+        operating-system: [ubuntu-latest, macos-latest]
         php-versions: ['7.4', '7.3']
     name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
 
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest
-      
-    - name: Get composer cache directory
-      id: composer-cache
-      run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - name: Setup problem matchers for PHP
+        run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
 
-    - name: Cache dependencies
-      uses: actions/cache@v1
-      with:
-        path: ${{ steps.composer-cache.outputs.dir }}
-        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-        restore-keys: ${{ runner.os }}-composer-
+      - name: Setup problem matchers for PHPUnit
+        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
-    # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
-    # Docs: https://getcomposer.org/doc/articles/scripts.md
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
-    # - name: Run test suite
-    #   run: composer run-script test
+      - name: Clone composer v2
+        run: 'cd ~ && git clone https://github.com/composer/composer.git'
+
+      - name: Build composer v2
+        run: cd ~/composer && composer install && composer compile
+
+      - name: Validate composer.json and composer.lock
+        run: php ~/composer/composer.phar validate
+
+      - name: Install dependencies
+        run: 'php ~/composer/composer.phar install ${{ env.COMPOSER_FLAGS }}'
+
+      - name: Run PHP Mess Detector
+        run: vendor/bin/phpmd --exclude vendor . text codesize,naming,unusedcode
+
+      - name: Run PHPCS
+        run: vendor/bin/phpcs
+
+      - name: Cache dependencies
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Run test suite
+        run: php ~/composer/composer.phar test

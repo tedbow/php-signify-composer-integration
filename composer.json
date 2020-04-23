@@ -8,6 +8,14 @@
             "Drupal\\Composer\\Plugin\\AutomaticUpdates\\": "."
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Drupal\\Composer\\Plugin\\AutomaticUpdates\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
     "extra": {
         "class": "Drupal\\Composer\\Plugin\\AutomaticUpdates\\Verify"
     },
@@ -18,11 +26,15 @@
     },
     "require-dev": {
         "composer/composer": "^2@dev",
-        "phpunit/phpunit": "^7.0 || ^8.0 || ^9.0"
+        "phpmd/phpmd": "^2.8",
+        "phpspec/prophecy-phpunit": "^1.0",
+        "phpunit/phpunit": "^8.0",
+        "squizlabs/php_codesniffer": "^3.0"
     },
     "license": "GPL-2.0-or-later",
     "config": {
         "sort-packages": true
     },
+    "prefer-stable":  true,
     "minimum-stability": "dev"
 }
