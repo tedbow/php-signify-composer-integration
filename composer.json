@@ -22,6 +22,7 @@
     "require": {
         "php": "^7.3",
         "composer-plugin-api": "^2@dev",
+        "composer/semver": "^3.0",
         "drupal/php-signify": "^1.0"
     },
     "require-dev": {

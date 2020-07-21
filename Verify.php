@@ -12,6 +12,7 @@ use Composer\IO\IOInterface;
 use Composer\Plugin\PluginEvents;
 use Composer\Plugin\PluginInterface;
 use Composer\Plugin\PostFileDownloadEvent;
+use Composer\Semver\Semver;
 use Drupal\Signify\ChecksumList;
 use Drupal\Signify\FailedCheckumFilter;
 use Drupal\Signify\Verifier;
@@ -78,14 +79,18 @@ class Verify implements PluginInterface, EventSubscriberInterface
     public function onPostFileDownload(PostFileDownloadEvent $event): void
     {
         $downloader = Factory::createHttpDownloader($this->inputOutput, $this->composer->getConfig());
-        $key = file_get_contents('artifacts/keys/root.pub');
+        $key = file_get_contents(__DIR__ . '/artifacts/keys/root.pub');
         $verifier = new Verifier($key);
-      // @TODO: hard-code the version and package info until
-      // https://github.com/composer/composer/pull/8810 lands.
+        $package = $event->getPackage();
+        $name = $package->getName();
+        $version = $package->getVersion();
+        if ($name !== 'drupal' && Semver::satisfies($version, '>= 8.0.0')) {
+          return;
+        }
         $url = sprintf(
             'https://updates.drupal.org/release-hashes/%s/%s/contents-sha256sums-packaged.csig',
-            'drupal',
-            '8.8.3'
+            $name,
+            $version
         );
         try {
             $csig = $downloader->get($url)->getBody();
