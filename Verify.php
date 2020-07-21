@@ -85,7 +85,7 @@ class Verify implements PluginInterface, EventSubscriberInterface
         $name = $package->getName();
         $version = $package->getVersion();
         if ($name !== 'drupal' && Semver::satisfies($version, '>= 8.0.0')) {
-          return;
+            return;
         }
         $url = sprintf(
             'https://updates.drupal.org/release-hashes/%s/%s/contents-sha256sums-packaged.csig',
