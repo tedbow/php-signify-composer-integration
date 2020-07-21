@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Composer\Plugin\AutomaticUpdates;
 
 use Composer\Composer;
+use Composer\Config;
 use Composer\Downloader\TransportException;
 use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\Factory;
@@ -105,5 +106,7 @@ class Verify implements PluginInterface, EventSubscriberInterface
         if (iterator_count($failed_checksums)) {
             throw new \RuntimeException('The downloaded files did not match what was expected.');
         }
+        $config = $this->composer->getConfig();
+        $config->merge(['drupal-update-verified' => $version]);
     }
 }
